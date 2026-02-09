@@ -1,20 +1,6 @@
-import nodemailer from "nodemailer";
-import type { Transporter } from "nodemailer";
+import { Resend } from "resend";
 
-let transporter: Transporter | null = null;
-
-const getTransporter = (): Transporter => {
-  if (!transporter) {
-    transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.SMTP_EMAIL,
-        pass: process.env.SMTP_PASSWORD,
-      },
-    });
-  }
-  return transporter;
-};
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 interface SendNoteEmailParams {
   to: string;
@@ -27,10 +13,15 @@ export const sendNoteCreatedEmail = async ({
   noteTitle,
   noteContent,
 }: SendNoteEmailParams): Promise<void> => {
+  if (!process.env.RESEND_API_KEY) {
+    console.log("Email skipped: RESEND_API_KEY not configured");
+    return;
+  }
+
   try {
-    const mailOptions = {
-      from: `"Lead Notes App" <${process.env.SMTP_EMAIL}>`,
-      to,
+    await resend.emails.send({
+      from: "Lead Notes <onboarding@resend.dev>", // Use your verified domain later
+      to: [to],
       subject: `New Note Created: ${noteTitle}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -44,9 +35,7 @@ export const sendNoteCreatedEmail = async ({
           </p>
         </div>
       `,
-    };
-
-    await getTransporter().sendMail(mailOptions);
+    });
     console.log(`Email sent to ${to}`);
   } catch (error) {
     console.error("Error sending email:", error);
