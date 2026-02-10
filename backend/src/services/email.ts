@@ -20,7 +20,7 @@ export const sendNoteCreatedEmail = async ({
 
   try {
     await resend.emails.send({
-      from: "Lead Notes <onboarding@resend.dev>", // Use your verified domain later
+      from: "Lead Notes <noreply@gksagar.online>",
       to: [to],
       subject: `New Note Created: ${noteTitle}`,
       html: `
